@@ -1,9 +1,13 @@
 package main
 
 import (
+	"database/sql"
 	"github.com/gorilla/mux"
+	"github.com/lib/pq"
+	"github.com/subosito/gotenv"
 	"log"
 	"net/http"
+	"os"
 )
 
 type Book struct {
@@ -14,8 +18,28 @@ type Book struct {
 }
 
 var books []Book
+var db *sql.DB
+
+func init() {
+	err := gotenv.Load()
+	logFatal(err)
+}
+
+func logFatal(err error) {
+	if err != nil {
+		log.Fatal(err)
+	}
+}
 
 func main() {
+	pgUrl, err := pq.ParseURL(os.Getenv("ELEPHANT_SQL_URL"))
+	logFatal(err)
+
+	db, err = sql.Open("postgres", pgUrl)
+	logFatal(err)
+
+	err = db.Ping()
+	logFatal(err)
 
 	router := mux.NewRouter()
 
